@@ -1,0 +1,4 @@
+rut,nombre,email,cuenta,saldo
+11111111-1,Ana Perez,ana.perez@ejemplo.invalid,000012345678,1250000
+22222222-2,Bruno Soto,bruno.soto@ejemplo.invalid,000087654321,830000
+# DATOS SINTETICOS. Representa el antipatron "dump de clientes dentro del repo".

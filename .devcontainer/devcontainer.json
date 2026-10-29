@@ -1,0 +1,14 @@
+{
+  "name": "Taller Banca Segura IA",
+  "image": "mcr.microsoft.com/devcontainers/java:21",
+  "forwardPorts": [8080],
+  "postCreateCommand": "./gradlew --no-daemon -q testClasses",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "humao.rest-client"
+      ]
+    }
+  }
+}

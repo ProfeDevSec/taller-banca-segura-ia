@@ -1,0 +1,63 @@
+# Reglas Semgrep del taller: "Security as Code" para las reglas de /security.
+# Ejecutar:  semgrep scan --config security/semgrep
+rules:
+  - id: sec-id-01-pathvariable-id-numerico
+    languages: [java]
+    severity: WARNING
+    message: >-
+      SEC-ID-01: identificador numérico secuencial en la ruta. Exponga un identificador público no predecible
+      (UUID/ULID) y valide la relación con el cliente autenticado (SEC-AUTHZ-02).
+    pattern-regex: '@PathVariable\s+(Long|long|Integer|int)\s+\w+'
+
+  - id: sec-authz-02-findbyid-sin-dueno
+    languages: [java]
+    severity: WARNING
+    message: >-
+      SEC-AUTHZ-02: búsqueda de un recurso solo por su identificador. Para recursos de cliente use una consulta
+      que incluya al dueño, por ejemplo findByPublicIdAndCustomerId(id, currentCustomer.id()).
+    patterns:
+      - pattern-either:
+          - pattern: $REPO.findById($ID)
+          - pattern: $REPO.findByPublicId($ID)
+      - metavariable-regex:
+          metavariable: $REPO
+          regex: (?i).*beneficiar.*
+
+  - id: sec-log-01-cuenta-en-logs
+    languages: [java]
+    severity: ERROR
+    message: >-
+      SEC-LOG-01: se registra un número de cuenta o RUT completo. Use Masking.account(...) o registre solo
+      identificadores públicos.
+    patterns:
+      - pattern-either:
+          - pattern: $LOG.$LEVEL(..., $X.getAccountNumber(), ...)
+          - pattern: $LOG.$LEVEL(..., $X.getHolderRut(), ...)
+      - metavariable-regex:
+          metavariable: $LEVEL
+          regex: ^(trace|debug|info|warn|error)$
+
+  - id: sec-err-01-stacktrace-expuesto
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      SEC-ERR-01: la configuración expone stack traces, mensajes o excepciones al cliente. Use "never".
+    paths:
+      include:
+        - "*.properties"
+        - "*.yml"
+        - "*.yaml"
+    pattern-regex: '(server|spring\.web)\.error\.include-(stacktrace|message|exception)\s*[=:]\s*(always|true)'
+
+  - id: sec-secrets-01-secreto-en-configuracion
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      SEC-SECRETS-01: valor literal en una propiedad sensible. Use una referencia ${VARIABLE} resuelta en runtime
+      desde Secret Manager / Vault.
+    paths:
+      include:
+        - "*.properties"
+        - "*.yml"
+        - "*.yaml"
+    pattern-regex: '(?i)^[\w.-]*(password|token|secret|api-key)[\w.-]*\s*[=:]\s*(?!\$\{)\S+'

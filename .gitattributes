@@ -1,0 +1,6 @@
+# Finales de línea consistentes: el wrapper y los scripts deben funcionar en Linux (CI, devcontainer).
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.jar binary

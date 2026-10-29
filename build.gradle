@@ -1,0 +1,63 @@
+// Taller Develrox - Desarrollo seguro en la era de la IA (beneficiarios y transferencias)
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'cl.develrox.taller'
+version = '1.0.0'
+description = 'Taller Banca Segura IA'
+
+def archunitVersion = '1.5.1'
+
+repositories {
+    mavenCentral()
+}
+
+// Compila para Java 21 aunque el equipo tenga un JDK más nuevo.
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    runtimeOnly 'com.h2database:h2'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-resttestclient'
+    testImplementation 'org.springframework.boot:spring-boot-restclient'
+    testImplementation 'org.apache.httpcomponents.client5:httpclient5'
+    testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// Las pruebas de seguridad (tag "security") se excluyen por defecto: parten en ROJO.
+// ./gradlew test -Pseguridad  => ejecuta TODAS las pruebas, incluidas las de seguridad
+def seguridad = providers.gradleProperty('seguridad').isPresent()
+
+tasks.named('test') {
+    useJUnitPlatform {
+        if (!seguridad) {
+            excludeTags 'security'
+        }
+    }
+    testLogging {
+        events 'failed'
+        exceptionFormat = 'short'
+    }
+    // Resumen al estilo Maven: "Tests run: 24, Failures: 0, Skipped: 0"
+    addTestListener(new TestListener() {
+        void beforeSuite(TestDescriptor suite) {}
+        void beforeTest(TestDescriptor test) {}
+        void afterTest(TestDescriptor test, TestResult result) {}
+        void afterSuite(TestDescriptor suite, TestResult result) {
+            if (!suite.parent) {
+                println "Tests run: ${result.testCount}, Failures: ${result.failedTestCount}, Skipped: ${result.skippedTestCount}"
+            }
+        }
+    })
+}

